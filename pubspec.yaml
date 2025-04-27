@@ -1,0 +1,32 @@
+name: hymn_song
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  zoom_widget: ^2.0.0
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/songs.json
+    - assets/images/
+
+  # fonts:
+  #   # - family: GasoekOne
+  #   #   fonts:
+  #   #     - asset: assets/fonts/GasoekOne-Regular.ttf

@@ -1,0 +1,189 @@
+import 'package:flutter/material.dart';
+import 'package:hymn_song/utils/secreen_size.dart';
+
+class Contents extends StatefulWidget {
+  const Contents({super.key});
+
+  @override
+  State<Contents> createState() => _ContentsState();
+}
+
+class _ContentsState extends State<Contents> {
+  double _fontScale = 1.0;
+  double _baseFontScale = 1.0;
+
+  // Min/max for accessibility
+  static const double _minScale = 0.6;
+  static const double _maxScale = 2.2;
+
+  // Detect if scaling
+  bool _scaling = false;
+
+  @override
+  Widget build(BuildContext context) {
+    SizeConfig.init(context);
+
+    final verseNumStyle = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 24 : 18) * _fontScale,
+      fontFamily: 'GasoekOne',
+    );
+    final verseTextStyle = TextStyle(
+      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 20 : 15) * _fontScale,
+      height: 1.5,
+      fontFamily: 'GasoekOne',
+    );
+
+    // This widget lets us catch scale/pinch while letting scroll through
+    return Listener(
+      onPointerSignal: (_) {}, // Just needed for pointer event propagation
+      child: GestureDetector(
+        onScaleStart: (details) {
+          _scaling = true;
+          _baseFontScale = _fontScale;
+        },
+        onScaleUpdate: (details) {
+          if (details.pointerCount > 1) {
+            setState(() {
+              _fontScale = (_baseFontScale * details.scale).clamp(_minScale, _maxScale);
+            });
+          }
+        },
+        onScaleEnd: (details) {
+          _scaling = false;
+        },
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (scrollNotification) {
+            // Let scroll pass through if not scaling
+            return _scaling;
+          },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: SizeConfig.fontSize(20),
+                vertical: SizeConfig.fontSize(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("V1", style: verseNumStyle),
+                  SizedBox(height: SizeConfig.fontSize(8) * _fontScale),
+                  Text(
+                    "Yaog yaw Si yiex pa tawx bwan uik, Pwi piang hak tiex yaog",
+                    style: verseTextStyle,
+                  ),
+                  SizedBox(height: SizeConfig.fontSize(30) * _fontScale),
+
+                  Text("V2", style: verseNumStyle),
+                  SizedBox(height: SizeConfig.fontSize(8) * _fontScale),
+                  Text(
+                    "yaw Nawh uik, Pa ot rao ma yaog yaw Nawhha,",
+                    style: verseTextStyle,
+                  ),
+                  SizedBox(height: SizeConfig.fontSize(30) * _fontScale),
+
+                  Text("V3", style: verseNumStyle),
+                  SizedBox(height: SizeConfig.fontSize(8) * _fontScale),
+                  Text(
+                    "Yaog Keeing mai Kawn, mai Khwan Si ngax. A men.",
+                    style: verseTextStyle,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+import 'package:flutter/material.dart';
+import 'package:hymn_song/components/app_bar.dart';
+import 'package:hymn_song/components/custom_bottom_nav_bar.dart';
+import 'package:hymn_song/utils/secreen_size.dart';
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 0;
+  int _currentSongIndex = 0;
+
+  final List<String> _songTitles = [
+    "⯇ 1 YAOGYAW SIVIEX PA TAWX BWAN UIK ⯈",
+    "⯇ 2 AMAZING GRACE ⯈",
+    "⯇ 3 ANOTHER HYMN ⯈",
+    // Add more songs as needed
+  ];
+
+  final List<Widget> _pages = [
+    Center(child: Text("Read Book")),
+    Center(child: Text("Music")),
+    Center(child: Text("Images")),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    SizeConfig.init(context);
+
+    return Scaffold(
+      appBar: CustomAppBar(
+        songTitle: _songTitles[_currentSongIndex],
+        onTitleTap: () {
+          _showSongPicker(context);
+        },
+        onSearchTap: () {},
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onTabSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
+    );
+  }
+
+  void _showSongPicker(BuildContext context) async {
+    final int? picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) => ListView.separated(
+        itemCount: _songTitles.length,
+        separatorBuilder: (context, idx) => const Divider(height: 1),
+        itemBuilder: (context, idx) => ListTile(
+          title: Text(
+            _songTitles[idx],
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          selected: idx == _currentSongIndex,
+          onTap: () => Navigator.pop(context, idx),
+        ),
+      ),
+    );
+    if (picked != null && picked != _currentSongIndex) {
+      setState(() {
+        _currentSongIndex = picked;
+        // You can also update your content here, e.g. change the page body, etc.
+      });
+    }
+  }
+}
+
+
+Future<SharedPreferences> getInstance()
+Type: Future<SharedPreferences> Function()
+
+package:shared_preferences/src/shared_preferences_legacy.dart
+
+Loads and parses the [SharedPreferences] for this app from disk.
+
+Because this is reading from disk, it shouldn't be awaited in performance-sensitive blocks.
