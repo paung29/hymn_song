@@ -23,6 +23,9 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   int _currentSongIndex = 0;
 
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
@@ -63,15 +66,30 @@ class _MainScreenState extends State<MainScreen> {
           appBar: CustomAppBar(
             songTitle: currentSongTitle,
             onTitleTap: () => _openSongListScreen(context, songs),
-            onSearchTap:
-                () => _searchBySongId(context, songs, (result) {
+            onMenuTap: () => _openMenuPage(context, songs), 
+            onSearchTap: () {
+              setState(() => _isSearching = true);
+            },
+            onCancelSearch: () {
+              setState(() {
+                _isSearching = false;
+                _searchController.clear();
+              });
+            },
+            searchController: _searchController,
+            onSearchChanged: (text) {
+              final id = int.tryParse(text.trim());
+              if (id != null) {
+                final idx = songs.indexWhere((s) => s.id == id);
+                if (idx != -1) {
                   setState(() {
-                    _currentSongIndex = result;
+                    _currentSongIndex = idx;
                     _selectedIndex = 0;
                   });
-                }),
-            songs: songs,
-            onMenuTap: () => _openMenuPage(context, songs),
+                }
+              }
+            },
+            isSearching: _isSearching,
           ),
           body: pages[_selectedIndex],
           bottomNavigationBar: CustomBottomNavBar(
@@ -259,22 +277,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _openMenuPage(BuildContext context, List<Song> songs) async {
-  final songId = await Navigator.push<int>(
-    context,
-    MaterialPageRoute(
-      builder: (context) => MenuPage(songs: songs),
-    ),
-  );
-  if (songId != null) {
-    // Find the index in the list
-    final idx = songs.indexWhere((s) => s.id == songId);
-    if (idx != -1) {
-      setState(() {
-        _currentSongIndex = idx;
-        _selectedIndex = 0; // go to main Content
-      });
+    final songId = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(builder: (context) => MenuPage(songs: songs)),
+    );
+    if (songId != null) {
+      // Find the index in the list
+      final idx = songs.indexWhere((s) => s.id == songId);
+      if (idx != -1) {
+        setState(() {
+          _currentSongIndex = idx;
+          _selectedIndex = 0; // go to main Content
+        });
+      }
     }
   }
-}
-
 }

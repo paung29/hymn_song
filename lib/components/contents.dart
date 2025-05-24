@@ -6,6 +6,7 @@ import 'package:hymn_song/utils/secreen_size.dart';
 class Contents extends StatefulWidget {
   final List<Song> songs;
   final int currentSongIndex;
+
   const Contents({
     super.key,
     required this.songs,
@@ -47,7 +48,9 @@ class _ContentsState extends State<Contents> {
     await SongStorage.toggleBookmark(songId);
     _loadBookmarkState(); // Refresh icon
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isBookmarked ? "Bookmark removed" : "Bookmarked!")),
+      SnackBar(
+        content: Text(_isBookmarked ? "Bookmark removed" : "Bookmarked!"),
+      ),
     );
   }
 
@@ -66,17 +69,23 @@ class _ContentsState extends State<Contents> {
 
     final verseNumStyle = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 24 : 18) * _fontScale,
+      fontSize:
+          SizeConfig.fontSize(SizeConfig.isTabletDevice ? 24 : 18) * _fontScale,
       fontFamily: 'GasoekOne',
     );
     final verseTextStyle = TextStyle(
-      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 20 : 15) * _fontScale,
+      fontSize:
+          SizeConfig.fontSize(SizeConfig.isTabletDevice ? 20 : 15) * _fontScale,
       height: 1.5,
       fontFamily: 'GasoekOne',
     );
+    final noteStyle = TextStyle(
+      fontSize: SizeConfig.fontSize(12) * _fontScale,
+      color: Colors.blueGrey,
+      fontFamily: 'monospace',
+    );
 
-    // Usually bottom nav bar is 56-60 height, add 24 for spacing
-    final bottomNavHeight = 60.0;
+    const bottomNavHeight = 60.0;
 
     return SizedBox.expand(
       child: Stack(
@@ -91,15 +100,18 @@ class _ContentsState extends State<Contents> {
               onScaleUpdate: (details) {
                 if (details.pointerCount > 1) {
                   setState(() {
-                    _fontScale = (_baseFontScale * details.scale).clamp(_minScale, _maxScale);
+                    _fontScale = (_baseFontScale * details.scale).clamp(
+                      _minScale,
+                      _maxScale,
+                    );
                   });
                 }
               },
-              onScaleEnd: (details) {
+              onScaleEnd: (_) {
                 _scaling = false;
               },
               child: NotificationListener<ScrollNotification>(
-                onNotification: (scrollNotification) => _scaling,
+                onNotification: (_) => _scaling,
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
@@ -136,19 +148,42 @@ class _ContentsState extends State<Contents> {
                             ],
                           ),
                         ),
-                        // Lyrics
+
+                        // Render verses and lyric blocks
                         for (final verse in song.verses) ...[
                           Text("V${verse.number}", style: verseNumStyle),
                           SizedBox(height: SizeConfig.fontSize(8) * _fontScale),
-                          for (final line in verse.lines)
-                            Wrap(
-                              children: [
-                                for (final wordNote in line) ...[
-                                  Text(wordNote.word + " ", style: verseTextStyle),
-                                ],
-                              ],
-                            ),
-                          SizedBox(height: SizeConfig.fontSize(30) * _fontScale),
+
+                          for (final block in verse.blocks)
+                            for (final line in block.lyricsLines)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        line.join(' '),
+                                        style: verseTextStyle,
+                                        textAlign: TextAlign.start,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "⏎",
+                                      style: verseTextStyle.copyWith(
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                          SizedBox(
+                            height: SizeConfig.fontSize(30) * _fontScale,
+                          ),
                         ],
                       ],
                     ),
@@ -157,10 +192,9 @@ class _ContentsState extends State<Contents> {
               ),
             ),
           ),
-          // BOOKMARK BUTTON (Above bottom nav bar, right corner)
           Positioned(
             right: 24,
-            bottom: bottomNavHeight + 20, // Space above nav bar
+            bottom: bottomNavHeight + 20,
             child: FloatingActionButton(
               heroTag: "bookmarkBtn",
               mini: true,

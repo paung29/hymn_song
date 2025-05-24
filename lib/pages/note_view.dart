@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hymn_song/model/song.dart';
 import 'package:hymn_song/utils/secreen_size.dart';
 
-class MusicView extends StatelessWidget {
+class MusicView extends StatefulWidget {
   final List<Song> songs;
   final int currentSongIndex;
 
@@ -13,89 +13,154 @@ class MusicView extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<MusicView> createState() => _MusicViewState();
+}
+
+class _MusicViewState extends State<MusicView> {
+  double _fontScale = 1.0;
+  double _baseFontScale = 1.0;
+  static const double _minScale = 0.6;
+  static const double _maxScale = 2.2;
+  bool _scaling = false;
+
+  @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
 
-    final idx = currentSongIndex.clamp(0, songs.length - 1);
-    final song = songs[idx];
+    final idx = widget.currentSongIndex.clamp(0, widget.songs.length - 1);
+    final song = widget.songs[idx];
 
     final verseNumStyle = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 24 : 18),
+      fontSize:
+          SizeConfig.fontSize(SizeConfig.isTabletDevice ? 24 : 18) * _fontScale,
       fontFamily: 'GasoekOne',
     );
+
     final verseTextStyle = TextStyle(
-      fontSize: SizeConfig.fontSize(SizeConfig.isTabletDevice ? 20 : 15),
+      fontSize:
+          SizeConfig.fontSize(SizeConfig.isTabletDevice ? 20 : 15) * _fontScale,
       height: 1.5,
       fontFamily: 'GasoekOne',
     );
+
     final noteStyle = TextStyle(
-      fontSize: SizeConfig.fontSize(12),
+      fontSize: SizeConfig.fontSize(12) * _fontScale,
       color: Colors.blueGrey,
       fontFamily: 'monospace',
     );
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.fontSize(20),
-          vertical: SizeConfig.fontSize(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title and subtitle (optional)
-            Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    song.title,
-                    style: verseNumStyle.copyWith(fontSize: verseNumStyle.fontSize! + 2),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (song.subtitle != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        song.subtitle!,
-                        style: verseTextStyle.copyWith(
-                          fontSize: verseTextStyle.fontSize! - 2,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            // Each verse
-            for (final verse in song.verses) ...[
-              Text("V${verse.number}", style: verseNumStyle),
-              SizedBox(height: SizeConfig.fontSize(8)),
-              for (final line in verse.lines)
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
+    return GestureDetector(
+      onScaleStart: (details) {
+        _scaling = true;
+        _baseFontScale = _fontScale;
+      },
+      onScaleUpdate: (details) {
+        if (details.pointerCount > 1) {
+          setState(() {
+            _fontScale = (_baseFontScale * details.scale).clamp(
+              _minScale,
+              _maxScale,
+            );
+          });
+        }
+      },
+      onScaleEnd: (_) => _scaling = false,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (_) => _scaling,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: SizeConfig.fontSize(20),
+            vertical: SizeConfig.fontSize(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
                   children: [
-                    for (final wordNote in line) ...[
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Show the note ABOVE the word
-                          if (wordNote.notes != null && wordNote.notes!.isNotEmpty)
-                            Text(wordNote.notes!.join('   '), style: noteStyle, textAlign: TextAlign.center),
-                          Text(wordNote.word, style: verseTextStyle, textAlign: TextAlign.center),
-                        ],
+                    Text(
+                      song.title,
+                      style: verseNumStyle.copyWith(
+                        fontSize: verseNumStyle.fontSize! + 2,
                       ),
-                      const SizedBox(width: 6),
-                    ]
+                      textAlign: TextAlign.center,
+                    ),
+                    if (song.subtitle != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          song.subtitle!,
+                          style: verseTextStyle.copyWith(
+                            fontSize: verseTextStyle.fontSize! - 2,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                   ],
                 ),
-              SizedBox(height: SizeConfig.fontSize(30)),
+              ),
+              for (final verse in song.verses) ...[
+                Text("V${verse.number}", style: verseNumStyle),
+                SizedBox(height: SizeConfig.fontSize(8)),
+                for (final block in verse.blocks)
+                  _buildAlignedBlock(block, verseTextStyle, noteStyle),
+                SizedBox(height: SizeConfig.fontSize(30)),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildAlignedBlock(
+  block,
+  TextStyle verseTextStyle,
+  TextStyle noteStyle,
+) {
+  final lyricsLines = block.lyricsLines;
+  final noteLines = block.noteLines;
+
+  if (noteLines.length != 4) {
+    return const Text("⚠️ Invalid noteLines count.");
+  }
+
+  // Find the number of vertical columns (smallest shared length across lyrics)
+  final int columnCount = [
+    noteLines[0].length,
+    noteLines[1].length,
+    noteLines[2].length,
+    noteLines[3].length,
+    ...lyricsLines.map((line) => line.length),
+  ].reduce((a, b) => a < b ? a : b); // use shortest length to be safe
+
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: List.generate(columnCount, (i) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(noteLines[0][i], style: noteStyle),
+              Text(noteLines[1][i], style: noteStyle),
+              for (final line in lyricsLines)
+                Text(
+                  line[i],
+                  style: verseTextStyle,
+                  textAlign: TextAlign.center,
+                ),
+              Text(noteLines[2][i], style: noteStyle),
+              Text(noteLines[3][i], style: noteStyle),
+            ],
+          ),
+        );
+      }),
+    ),
+  );
+}
 }

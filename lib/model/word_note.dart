@@ -1,11 +1,18 @@
-class WordNote {
-  final String word;
-  final List<String>? notes;
+class LyricBlock {
+  final List<List<String>> noteLines;     // 4 lines of notes
+  final List<List<String>> lyricsLines;   // 1-N lines of lyrics (each line = list of words)
 
-  WordNote({required this.word, this.notes});
+  LyricBlock({
+    required this.noteLines,
+    required this.lyricsLines,
+  });
 
-  factory WordNote.fromJson(Map<String, dynamic> json) => WordNote(
-    word: json['word'],
-    notes: json['notes'] != null ? List<String>.from(json['notes']) : null,
-  );
+  factory LyricBlock.fromJson(Map<String, dynamic> json) => LyricBlock(
+        noteLines: (json['noteLines'] as List)
+            .map((line) => List<String>.from(line))
+            .toList(),
+        lyricsLines: (json['lyricsLines'] as List)
+            .map((line) => List<String>.from(line))
+            .toList(),
+      );
 }

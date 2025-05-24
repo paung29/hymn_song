@@ -27,9 +27,9 @@ class CustomBottomNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
         child: Row(
           children: [
-            _buildNavIcon(Icons.menu_book, "Read", 0, iconSize, activeColor, inactiveColor),
-            _buildNavIcon(Icons.library_music, "Music", 1, iconSize, activeColor, inactiveColor),
-            _buildNavIcon(Icons.image, "Photo", 2, iconSize, activeColor, inactiveColor),
+            _buildNavIcon(Icons.menu_book, "Lyrics", 0, iconSize, activeColor, inactiveColor),
+            _buildNavIcon(Icons.library_music, "Note", 1, iconSize, activeColor, inactiveColor),
+            _buildNavIcon(Icons.image, "Image", 2, iconSize, activeColor, inactiveColor),
           ],
         ),
       ),
