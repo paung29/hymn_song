@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:hymn_song/model/song.dart';
-import 'package:hymn_song/pages/menu_page.dart';
 import 'package:hymn_song/utils/colors_data.dart';
 import 'package:hymn_song/utils/secreen_size.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String songTitle;
   final VoidCallback onTitleTap;
-  final VoidCallback onSearchTap;
-  final List<Song> songs;
   final VoidCallback onMenuTap;
+  final VoidCallback onCancelSearch;
+  final VoidCallback onSearchTap;
+  final TextEditingController searchController;
+  final Function(String) onSearchChanged;
+  final bool isSearching;
 
   const CustomAppBar({
     required this.songTitle,
     required this.onTitleTap,
-    required this.onSearchTap,
-    required this.songs,
     required this.onMenuTap,
+    required this.onSearchTap,
+    required this.onCancelSearch,
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.isSearching,
     Key? key,
   }) : super(key: key);
 
@@ -30,13 +35,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     double titleFontSize = SizeConfig.fontSize(baseTitleSize);
     double iconButtonSize = SizeConfig.fontSize(baseIconSize);
 
-    // Tighter clamps for both tablet and phone
     if (!SizeConfig.isTabletDevice) {
-      titleFontSize = titleFontSize.clamp(15.0, 22.0); // Phone max 22
-      iconButtonSize = iconButtonSize.clamp(18.0, 28.0); // Phone max 28
+      titleFontSize = titleFontSize.clamp(15.0, 22.0);
+      iconButtonSize = iconButtonSize.clamp(18.0, 28.0);
     } else {
-      titleFontSize = titleFontSize.clamp(18.0, 28.0); // Tablet max 28
-      iconButtonSize = iconButtonSize.clamp(22.0, 36.0); // Tablet max 36
+      titleFontSize = titleFontSize.clamp(18.0, 28.0);
+      iconButtonSize = iconButtonSize.clamp(22.0, 36.0);
     }
 
     final double toolbarHeight = SizeConfig.isTabletDevice ? 70 : 56;
@@ -53,12 +57,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Padding(
         padding: EdgeInsets.symmetric(vertical: verticalPadding),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: GestureDetector(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: isSearching
+              ? TextField(
+                  key: const ValueKey("searchField"),
+                  controller: searchController,
+                  onChanged: onSearchChanged,
+                  autofocus: true,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: titleFontSize,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Enter song number or title',
+                    hintStyle: TextStyle(color: Colors.white70),
+                    border: InputBorder.none,
+                  ),
+                )
+              : GestureDetector(
+                  key: const ValueKey("songTitle"),
                   onTap: onTitleTap,
                   child: Text(
                     songTitle,
@@ -73,23 +94,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     maxLines: 1,
                   ),
                 ),
-              ),
-            ),
-            IconButton(
-              onPressed: onSearchTap,
-              icon: Icon(
-                Icons.search,
-                color: ColorsData.secondary_white,
-                size: iconButtonSize,
-              ),
-              splashRadius: iconButtonSize * 0.8,
-            ),
-          ],
         ),
       ),
+      actions: [
+        isSearching
+            ? IconButton(
+                icon: Icon(Icons.close, color: Colors.white),
+                onPressed: onCancelSearch,
+              )
+            : IconButton(
+                icon: Icon(Icons.search, color: Colors.white),
+                onPressed: onSearchTap,
+              ),
+      ],
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(56); // Matches default AppBar
+  Size get preferredSize => const Size.fromHeight(56);
 }
