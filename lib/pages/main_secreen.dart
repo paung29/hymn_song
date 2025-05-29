@@ -5,6 +5,7 @@ import 'package:hymn_song/components/app_bar.dart';
 import 'package:hymn_song/components/custom_bottom_nav_bar.dart';
 import 'package:hymn_song/pages/menu_page.dart';
 import 'package:hymn_song/pages/note_view.dart';
+import 'package:hymn_song/pages/search_page.dart';
 import 'package:hymn_song/pages/songs_list_page.dart';
 import 'package:hymn_song/utils/colors_data.dart';
 import 'package:hymn_song/utils/secreen_size.dart';
@@ -66,9 +67,22 @@ class _MainScreenState extends State<MainScreen> {
           appBar: CustomAppBar(
             songTitle: currentSongTitle,
             onTitleTap: () => _openSongListScreen(context, songs),
-            onMenuTap: () => _openMenuPage(context, songs), 
-            onSearchTap: () {
-              setState(() => _isSearching = true);
+            onMenuTap: () => _openMenuPage(context, songs),
+            onSearchTap: () async {
+              final songs = snapshot.data ?? [];
+              final selectedIdx = await Navigator.push<int>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchPage(songs: songs),
+                ),
+              );
+
+              if (selectedIdx != null && selectedIdx != _currentSongIndex) {
+                setState(() {
+                  _currentSongIndex = selectedIdx;
+                  _selectedIndex = 0;
+                });
+              }
             },
             onCancelSearch: () {
               setState(() {
@@ -126,155 +140,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _searchBySongId(
-    BuildContext context,
-    List<Song> songs,
-    void Function(int idx) onFound,
-  ) async {
-    final controller = TextEditingController();
-
-    final result = await showGeneralDialog<int>(
-      context: context,
-      barrierLabel: "Search",
-      barrierDismissible: true,
-      barrierColor: Colors.black38,
-      transitionDuration: const Duration(milliseconds: 150),
-      pageBuilder: (context, anim1, anim2) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-          child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.92,
-                constraints: const BoxConstraints(maxWidth: 380),
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [BoxShadow(blurRadius: 16, color: Colors.black12)],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Input box
-                    TextField(
-                      controller: controller,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.6,
-                      ),
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        hintText: 'Enter song number',
-                        hintStyle: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF624E5B),
-                            width: 1.2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF624E5B),
-                            width: 1.8,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    // Buttons row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[100],
-                              foregroundColor: Colors.black87,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              "cancel",
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF624E5B),
-                              foregroundColor: Colors.white,
-                              elevation: 1,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () {
-                              final id = int.tryParse(controller.text.trim());
-                              if (id != null) {
-                                final idx = songs.indexWhere((s) => s.id == id);
-                                if (idx != -1) {
-                                  Navigator.of(context).pop(idx);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Song not found.'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            child: const Text(
-                              "search",
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return FadeTransition(opacity: anim1, child: child);
-      },
-    );
-
-    if (result != null) {
-      onFound(result); // use: setState(() { _currentSongIndex = result; ... });
-    }
-  }
 
   void _openMenuPage(BuildContext context, List<Song> songs) async {
     final songId = await Navigator.push<int>(

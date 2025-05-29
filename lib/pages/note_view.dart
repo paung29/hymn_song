@@ -58,10 +58,8 @@ class _MusicViewState extends State<MusicView> {
       onScaleUpdate: (details) {
         if (details.pointerCount > 1) {
           setState(() {
-            _fontScale = (_baseFontScale * details.scale).clamp(
-              _minScale,
-              _maxScale,
-            );
+            _fontScale = (_baseFontScale * details.scale)
+                .clamp(_minScale, _maxScale);
           });
         }
       },
@@ -116,51 +114,45 @@ class _MusicViewState extends State<MusicView> {
   }
 
   Widget _buildAlignedBlock(
-  block,
-  TextStyle verseTextStyle,
-  TextStyle noteStyle,
-) {
-  final lyricsLines = block.lyricsLines;
-  final noteLines = block.noteLines;
+    dynamic block,
+    TextStyle verseTextStyle,
+    TextStyle noteStyle,
+  ) {
+    final lyricsLines = block.lyricsLines;
+    final noteLines = block.noteLines;
 
-  if (noteLines.length != 4) {
-    return const Text("⚠️ Invalid noteLines count.");
-  }
+    if (noteLines.length != 4) {
+      return const Text("⚠️ Invalid noteLines count.");
+    }
 
-  // Find the number of vertical columns (smallest shared length across lyrics)
-  final int columnCount = [
-    noteLines[0].length,
-    noteLines[1].length,
-    noteLines[2].length,
-    noteLines[3].length,
-    ...lyricsLines.map((line) => line.length),
-  ].reduce((a, b) => a < b ? a : b); // use shortest length to be safe
+    final int columnCount = [
+      noteLines[0].length,
+      noteLines[1].length,
+      noteLines[2].length,
+      noteLines[3].length,
+      ...lyricsLines.map((line) => line.length),
+    ].reduce((a, b) => a < b ? a : b); // shortest shared length
 
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: List.generate(columnCount, (i) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(noteLines[0][i], style: noteStyle),
-              Text(noteLines[1][i], style: noteStyle),
-              for (final line in lyricsLines)
-                Text(
-                  line[i],
-                  style: verseTextStyle,
-                  textAlign: TextAlign.center,
-                ),
-              Text(noteLines[2][i], style: noteStyle),
-              Text(noteLines[3][i], style: noteStyle),
-            ],
-          ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(noteLines[0][i], style: noteStyle),
+            Text(noteLines[1][i], style: noteStyle),
+            for (final line in lyricsLines)
+              Text(
+                line[i],
+                style: verseTextStyle,
+                textAlign: TextAlign.center,
+              ),
+            Text(noteLines[2][i], style: noteStyle),
+            Text(noteLines[3][i], style: noteStyle),
+          ],
         );
       }),
-    ),
-  );
-}
+    );
+  }
 }

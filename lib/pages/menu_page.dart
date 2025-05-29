@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hymn_song/data_save.dart';
 import 'package:hymn_song/model/song.dart';
+import 'package:hymn_song/pages/about_this_app.dart';
 import 'package:hymn_song/utils/colors_data.dart';
 
 class MenuPage extends StatefulWidget {
@@ -83,23 +84,12 @@ class _MenuPageState extends State<MenuPage> {
             },
           ),
           const SizedBox(height: 18),
-          _sectionHeader("About"),
+          _sectionHeader("Why I built this app"),
           _simpleTile(
-            icon: Icons.info_outline_rounded,
-            title: "About this app",
+            icon: Icons.mail,
+            title: "From a promise to a purpose",
             onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Your Hymn App',
-                applicationVersion: '1.0.0',
-                applicationLegalese: '© 2025 Your Name',
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16),
-                    child: Text('This app helps you read and bookmark hymns.'),
-                  ),
-                ],
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context)=> AboutThisApp()));
             },
           ),
         ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hymn_song/model/song.dart';
 import 'package:hymn_song/utils/colors_data.dart';
 import 'package:hymn_song/utils/secreen_size.dart';
 
