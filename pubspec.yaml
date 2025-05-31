@@ -24,7 +24,7 @@ flutter:
 
   assets:
     - assets/songs.json
-    - assets/images/
+    - assets/responsive.json
 
   # fonts:
   #   # - family: GasoekOne

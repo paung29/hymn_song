@@ -1,41 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:hymn_song/model/song.dart';
+import 'package:hymn_song/model/responsive.dart';
+import 'package:hymn_song/pages/responsive_details.dart';
 
-class SongListScreen extends StatelessWidget {
-  final List<Song> songs;
-  final int? selectedId;
-  final ValueChanged<int> onSongSelected;
+class ResponsiveReadingList extends StatefulWidget {
+  final List<ResponsiveReading> readings;
 
-  const SongListScreen({
-    Key? key,
-    required this.songs,
-    this.selectedId,
-    required this.onSongSelected,
-  }) : super(key: key);
+  const ResponsiveReadingList({super.key, required this.readings});
+
+  @override
+  State<ResponsiveReadingList> createState() => _ResponsiveReadingListState();
+}
+
+class _ResponsiveReadingListState extends State<ResponsiveReadingList> {
+  int? selectedId;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // No title text in AppBar
       appBar: AppBar(
-        title: Text("Song List"),
+        title: Text("Resposive Reading List"),
+        centerTitle: true,
         backgroundColor: const Color(0xFF624E5B),
         foregroundColor: Colors.white,
         elevation: 0.8,
-        leading: BackButton(color: Colors.white),
+        automaticallyImplyLeading: false,
       ),
       backgroundColor: const Color(0xFF624E5B),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        itemCount: songs.length,
+        itemCount: widget.readings.length,
         separatorBuilder: (context, i) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
-          final song = songs[i];
-          final isSelected = selectedId == song.id;
+          final item = widget.readings[i];
+          final isSelected = selectedId == item.id;
+
           return InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: () {
-              onSongSelected(i);
+              setState(() {
+                selectedId = item.id;
+              });
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ResponsiveReadingDetail(reading: item),
+                ),
+              );
             },
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -51,7 +62,7 @@ class SongListScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    "${song.id}",
+                    "${item.id}",
                     style: const TextStyle(
                       fontFamily: 'GasoekOne',
                       fontWeight: FontWeight.bold,
@@ -69,13 +80,14 @@ class SongListScreen extends StatelessWidget {
                   const SizedBox(width: 28),
                   Expanded(
                     child: Text(
-                      song.title,
+                      item.name,
                       style: const TextStyle(
                         fontFamily: 'GasoekOne',
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                         color: Colors.white,
                         letterSpacing: 1.05,
+                        overflow: TextOverflow.ellipsis,
                         shadows: [
                           Shadow(
                             blurRadius: 0.5,
@@ -84,7 +96,6 @@ class SongListScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

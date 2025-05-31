@@ -1,10 +1,11 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:hymn_song/components/app_bar.dart';
 import 'package:hymn_song/components/custom_bottom_nav_bar.dart';
+import 'package:hymn_song/model/responsive.dart';
 import 'package:hymn_song/pages/menu_page.dart';
 import 'package:hymn_song/pages/note_view.dart';
+import 'package:hymn_song/pages/responsive_reading.dart';
 import 'package:hymn_song/pages/search_page.dart';
 import 'package:hymn_song/pages/songs_list_page.dart';
 import 'package:hymn_song/utils/colors_data.dart';
@@ -31,8 +32,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
 
-    return FutureBuilder<List<Song>>(
-      future: loadSongs(),
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        loadSongs(),
+        loadReadings(),
+      ]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -44,67 +48,67 @@ class _MainScreenState extends State<MainScreen> {
             body: Center(child: Text("Error: ${snapshot.error}")),
           );
         }
-        final songs = snapshot.data ?? [];
+
+        final songs = snapshot.data![0] as List<Song>;
+        final readings = snapshot.data![1] as List<ResponsiveReading>;
+
         if (songs.isEmpty) {
           return const Scaffold(body: Center(child: Text("No songs found")));
         }
 
-        // 1. Make a list of song titles for the picker
-        final songTitles = songs.map((s) => "${s.id} ${s.title}").toList();
-
-        // 2. Show ID + title in the AppBar
         final currentSong = songs[_currentSongIndex];
         final currentSongTitle = "${currentSong.id} ${currentSong.title}";
 
         List<Widget> pages = [
           Contents(songs: songs, currentSongIndex: _currentSongIndex),
           MusicView(songs: songs, currentSongIndex: _currentSongIndex),
-          Center(child: Text("Images")),
+          ResponsiveReadingList(readings: readings),
         ];
 
         return Scaffold(
           backgroundColor: ColorsData.secondary_white,
-          appBar: CustomAppBar(
-            songTitle: currentSongTitle,
-            onTitleTap: () => _openSongListScreen(context, songs),
-            onMenuTap: () => _openMenuPage(context, songs),
-            onSearchTap: () async {
-              final songs = snapshot.data ?? [];
-              final selectedIdx = await Navigator.push<int>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchPage(songs: songs),
-                ),
-              );
+          appBar: _selectedIndex == 2
+              ? null
+              : CustomAppBar(
+                  songTitle: currentSongTitle,
+                  onTitleTap: () => _openSongListScreen(context, songs),
+                  onMenuTap: () => _openMenuPage(context, songs),
+                  onSearchTap: () async {
+                    final selectedIdx = await Navigator.push<int>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SearchPage(songs: songs),
+                      ),
+                    );
 
-              if (selectedIdx != null && selectedIdx != _currentSongIndex) {
-                setState(() {
-                  _currentSongIndex = selectedIdx;
-                  _selectedIndex = 0;
-                });
-              }
-            },
-            onCancelSearch: () {
-              setState(() {
-                _isSearching = false;
-                _searchController.clear();
-              });
-            },
-            searchController: _searchController,
-            onSearchChanged: (text) {
-              final id = int.tryParse(text.trim());
-              if (id != null) {
-                final idx = songs.indexWhere((s) => s.id == id);
-                if (idx != -1) {
-                  setState(() {
-                    _currentSongIndex = idx;
-                    _selectedIndex = 0;
-                  });
-                }
-              }
-            },
-            isSearching: _isSearching,
-          ),
+                    if (selectedIdx != null && selectedIdx != _currentSongIndex) {
+                      setState(() {
+                        _currentSongIndex = selectedIdx;
+                        _selectedIndex = 0;
+                      });
+                    }
+                  },
+                  onCancelSearch: () {
+                    setState(() {
+                      _isSearching = false;
+                      _searchController.clear();
+                    });
+                  },
+                  searchController: _searchController,
+                  onSearchChanged: (text) {
+                    final id = int.tryParse(text.trim());
+                    if (id != null) {
+                      final idx = songs.indexWhere((s) => s.id == id);
+                      if (idx != -1) {
+                        setState(() {
+                          _currentSongIndex = idx;
+                          _selectedIndex = 0;
+                        });
+                      }
+                    }
+                  },
+                  isSearching: _isSearching,
+                ),
           body: pages[_selectedIndex],
           bottomNavigationBar: CustomBottomNavBar(
             selectedIndex: _selectedIndex,
@@ -123,14 +127,13 @@ class _MainScreenState extends State<MainScreen> {
     final picked = await Navigator.push<int>(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => SongListScreen(
-              songs: songs,
-              selectedId: songs[_currentSongIndex].id,
-              onSongSelected: (idx) {
-                Navigator.pop(context, idx); // Return the index
-              },
-            ),
+        builder: (context) => SongListScreen(
+          songs: songs,
+          selectedId: songs[_currentSongIndex].id,
+          onSongSelected: (idx) {
+            Navigator.pop(context, idx);
+          },
+        ),
       ),
     );
     if (picked != null && picked != _currentSongIndex) {
@@ -140,19 +143,17 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-
   void _openMenuPage(BuildContext context, List<Song> songs) async {
     final songId = await Navigator.push<int>(
       context,
       MaterialPageRoute(builder: (context) => MenuPage(songs: songs)),
     );
     if (songId != null) {
-      // Find the index in the list
       final idx = songs.indexWhere((s) => s.id == songId);
       if (idx != -1) {
         setState(() {
           _currentSongIndex = idx;
-          _selectedIndex = 0; // go to main Content
+          _selectedIndex = 0;
         });
       }
     }

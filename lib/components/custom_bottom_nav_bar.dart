@@ -29,7 +29,7 @@ class CustomBottomNavBar extends StatelessWidget {
           children: [
             _buildNavIcon(Icons.menu_book, "Lyrics", 0, iconSize, activeColor, inactiveColor),
             _buildNavIcon(Icons.library_music, "Note", 1, iconSize, activeColor, inactiveColor),
-            _buildNavIcon(Icons.image, "Image", 2, iconSize, activeColor, inactiveColor),
+            _buildNavIcon(Icons.question_answer, "Responsive Reading", 2, iconSize, activeColor, inactiveColor),
           ],
         ),
       ),

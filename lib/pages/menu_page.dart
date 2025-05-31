@@ -89,7 +89,7 @@ class _MenuPageState extends State<MenuPage> {
             icon: Icons.mail,
             title: "From a promise to a purpose",
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context)=> AboutThisApp()));
+              // Navigator.push(context, MaterialPageRoute(builder: (context)=> AboutThisApp()));
             },
           ),
         ],
