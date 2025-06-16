@@ -58,8 +58,10 @@ class _MusicViewState extends State<MusicView> {
       onScaleUpdate: (details) {
         if (details.pointerCount > 1) {
           setState(() {
-            _fontScale = (_baseFontScale * details.scale)
-                .clamp(_minScale, _maxScale);
+            _fontScale = (_baseFontScale * details.scale).clamp(
+              _minScale,
+              _maxScale,
+            );
           });
         }
       },
@@ -120,6 +122,7 @@ class _MusicViewState extends State<MusicView> {
   ) {
     final lyricsLines = block.lyricsLines;
     final noteLines = block.noteLines;
+    final barGroups = block.barGroups;
 
     if (noteLines.length != 4) {
       return const Text("⚠️ Invalid noteLines count.");
@@ -140,15 +143,56 @@ class _MusicViewState extends State<MusicView> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Note line 0
+            if (barGroups[0]?.any((g) => i >= g.from && i <= g.to) ?? false)
+              Container(
+                width: 20,
+                height: 2,
+                color: Colors.black,
+                margin: const EdgeInsets.only(bottom: 4),
+              )
+            else
+              const SizedBox(height: 6),
             Text(noteLines[0][i], style: noteStyle),
+
+            // Note line 1
+            if (barGroups[1]?.any((g) => i >= g.from && i <= g.to) ?? false)
+              Container(
+                width: 20,
+                height: 2,
+                color: Colors.black,
+                margin: const EdgeInsets.only(bottom: 4),
+              )
+            else
+              const SizedBox(height: 6),
             Text(noteLines[1][i], style: noteStyle),
+
+            // Lyrics line(s)
             for (final line in lyricsLines)
-              Text(
-                line[i],
-                style: verseTextStyle,
-                textAlign: TextAlign.center,
-              ),
+              Text(line[i], style: verseTextStyle, textAlign: TextAlign.center),
+
+            // Note line 2
+            if (barGroups[2]?.any((g) => i >= g.from && i <= g.to) ?? false)
+              Container(
+                width: 20,
+                height: 2,
+                color: Colors.black,
+                margin: const EdgeInsets.only(bottom: 4),
+              )
+            else
+              const SizedBox(height: 6),
             Text(noteLines[2][i], style: noteStyle),
+
+            // Note line 3
+            if (barGroups[3]?.any((g) => i >= g.from && i <= g.to) ?? false)
+              Container(
+                width: 20,
+                height: 2,
+                color: Colors.black,
+                margin: const EdgeInsets.only(bottom: 4),
+              )
+            else
+              const SizedBox(height: 6),
             Text(noteLines[3][i], style: noteStyle),
           ],
         );
